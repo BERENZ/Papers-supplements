@@ -1,6 +1,7 @@
-### new plot
-library(ggplot2)
-library(googletrend)
+# load packages ------------------------------------------------------------
+
+library(ggplot2) ## vis
+library(googletrend) ## get data directly from google docs
 library(dplyr)
 library(tidyr)
 library(stringi)
@@ -13,21 +14,17 @@ stats <- read_excel(
   sheet = 3,
   skip = 3,
   col_names = F
-)
-
-
-selected_stats <- stats[c(4,9),-c(1,2)] %>%
+) %>%
+  .[c(4,9),-c(1,2)] %>%
   t() %>%
   apply(.,2,as.numeric) %>%
   as.data.frame() %>%
   mutate(date = stri_datetime_create(rep(2000:2015,each = 12),
                                      rep(1:12,times = 16),1)) %>%
   tbl_df() %>%
-  na.omit()
-
-names(selected_stats)[1:2] <- c('przecietne_zatrudnienie','bezrobotni_indeks')
-
-selected_stats <- selected_stats %>%
+  na.omit() %>%
+  rename(przecietne_zatrudnienie = V1,
+         bezrobotni_indeks = V2)  %>%
   gather(stat,value,-date)
 
 ### Google data
@@ -45,9 +42,10 @@ google_trends <- google_trends %>%
   rename(value = index,
          date = week)
 
-### files to plot
 
-to_plot <- bind_rows(selected_stats,google_trends) %>%
+# prepare data to code ----------------------------------------------------
+
+to_plot <- bind_rows(stats,google_trends) %>%
   group_by(stat) %>%
   mutate(value_normalized = (value - min(value)) / (max(value) - min(value))) %>%
   ungroup() %>%
@@ -61,7 +59,11 @@ to_plot <- bind_rows(selected_stats,google_trends) %>%
     )
   ))
 
+### reference line with 31th December
 vline_data <- data_frame(vline = stri_datetime_create(seq(2003,2015,1),12,31))
+
+
+# final plot --------------------------------------------------------------
 
 ggplot(data = to_plot,
        aes(x = date,
