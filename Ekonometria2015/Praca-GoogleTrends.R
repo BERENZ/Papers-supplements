@@ -9,7 +9,7 @@ library(stringi)
 
 praca_google <- googletrend::gettrend(keyword = 'praca',
                                       geo = 'PL',
-                                      category = '0-958-60-960',
+                                      category = '0-958-60',
                                       use.monthly = T,
                                       plot = F)
 praca_google <- praca_google %>%
